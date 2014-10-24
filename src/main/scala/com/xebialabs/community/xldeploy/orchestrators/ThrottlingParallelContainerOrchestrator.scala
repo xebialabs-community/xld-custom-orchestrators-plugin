@@ -15,7 +15,7 @@ import com.xebialabs.deployit.plugin.api.udm.{Container, DeployedApplication}
 
 import scala.collection.convert.wrapAll._
 
-@Orchestrator.Metadata(name = "parallel-by-container-throttle", description = "The throttled parallel by container orchestrator")
+@Orchestrator.Metadata(name = "parallel-by-container-throttled", description = "The throttled parallel by container orchestrator")
 class ThrottlingParallelContainerOrchestrator extends Orchestrator {
   def orchestrate(spec: DeltaSpecification): Orchestration = getOrchestrations(spec)
 
@@ -32,9 +32,9 @@ class ThrottlingParallelContainerOrchestrator extends Orchestrator {
 
     val throttleProperty: Option[PropertyDescriptor] = Option(spec.getDeployedApplication.getType.getDescriptor.getPropertyDescriptor("maxContainersInParallel"))
     throttleProperty.map(_.get(spec.getDeployedApplication).asInstanceOf[Int]) match {
-      case Some(mcip) if mcip >= 1 =>
+      case Some(mcip) if mcip >= 1 && sorted.size > mcip =>
         val chunked: Iterator[List[(Container, List[Delta])]] = sorted.grouped(mcip)
-        val pars = chunked.map({ l => parallel(desc, toInterleaved(l))}).toList
+        val pars = chunked.map({ l => parallel(getDescriptionForContainers(spec.getOperation, l.map(_._1)), toInterleaved(l))}).toList
         serial(desc, pars)
       case _ =>
         parallel(desc, toInterleaved(sorted))
@@ -44,6 +44,7 @@ class ThrottlingParallelContainerOrchestrator extends Orchestrator {
   private val verbs: Map[_, _] = Map(Operation.CREATE -> "Deploying", Operation.DESTROY -> "Undeploying", Operation.MODIFY -> "Updating", Operation.NOOP -> "Not updating")
 
   def getDescriptionForContainer(op: Operation, con: Container): String = List(verbs.get(op), "on container", con.getName).mkString(" ")
+  def getDescriptionForContainers(op: Operation, con: Seq[Container]): String = List(verbs.get(op), "on containers", con.map(_.getName).mkString(", ")).mkString(" ")
 
   def getDescriptionForSpec(specification: DeltaSpecification): String = {
     val deployedApplication: DeployedApplication = specification.getDeployedApplication
