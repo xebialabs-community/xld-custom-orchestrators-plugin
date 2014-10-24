@@ -1,0 +1,69 @@
+defaultTasks 'build'
+
+buildscript {
+  repositories {
+    jcenter()
+  }
+  dependencies {
+    classpath "nl.javadude.gradle.plugins:license-gradle-plugin:0.11.0"
+  }
+}
+
+apply plugin: "com.github.hierynomus.license"
+
+apply plugin: 'scala'
+apply plugin: 'idea'
+apply plugin: 'eclipse'
+apply plugin: 'maven'
+
+group = 'com.xebialabs.deployit.community'
+version = '4.5.0'
+
+sourceCompatibility = 1.7
+targetCompatibility = 1.7
+
+def apiVersion = '2014.7.3'
+
+repositories {
+  mavenLocal()
+  mavenCentral()
+  maven {
+      credentials {
+            username 'community-plugins'
+            password 'community'
+        }
+      url 'http://nexus.xebialabs.com/nexus/content/repositories/releases'
+    }
+}
+
+configurations {
+  compile {
+    transitive = false
+  }
+}
+
+dependencies {
+  compile "org.scala-lang:scala-library:2.10.3"
+  compile "com.xebialabs.deployit:udm-plugin-api:$apiVersion"
+  compile "com.xebialabs.deployit:engine-spi:$apiVersion"
+  compile "com.xebialabs.deployit:engine-api:$apiVersion"
+}
+
+task sourcesJar(type: Jar) {
+    from sourceSets.main.allSource
+    classifier = 'sources'
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = "javadoc"
+    from javadoc.destinationDir
+}
+
+artifacts {
+    archives sourcesJar, javadocJar
+}
+
+license {
+    header rootProject.file('src/main/license/xebialabs_community.license')
+    strictCheck true
+}
