@@ -22,7 +22,7 @@ version = '4.5.0'
 sourceCompatibility = 1.7
 targetCompatibility = 1.7
 
-def apiVersion = '2014.7.5-SNAPSHOT'
+def apiVersion = '2014.7.4'
 
 repositories {
   mavenLocal()
@@ -47,6 +47,7 @@ dependencies {
   compile "com.xebialabs.deployit:udm-plugin-api:$apiVersion"
   compile "com.xebialabs.deployit:engine-spi:$apiVersion"
   compile "com.xebialabs.deployit:engine-api:$apiVersion"
+  compile files("hotfix/hotfix-xld45x-tokens.jar")
 }
 
 task sourcesJar(type: Jar) {
