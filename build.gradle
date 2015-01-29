@@ -22,7 +22,7 @@ version = '4.5.0'
 sourceCompatibility = 1.7
 targetCompatibility = 1.7
 
-def apiVersion = '2014.7.3'
+def apiVersion = '2014.7.5-SNAPSHOT'
 
 repositories {
   mavenLocal()
@@ -54,13 +54,8 @@ task sourcesJar(type: Jar) {
     classifier = 'sources'
 }
 
-task javadocJar(type: Jar, dependsOn: javadoc) {
-    classifier = "javadoc"
-    from javadoc.destinationDir
-}
-
 artifacts {
-    archives sourcesJar, javadocJar
+    archives sourcesJar
 }
 
 license {
