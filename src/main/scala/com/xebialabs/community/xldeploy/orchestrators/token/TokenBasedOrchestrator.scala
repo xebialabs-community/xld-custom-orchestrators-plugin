@@ -5,22 +5,20 @@
  */
 package com.xebialabs.community.xldeploy.orchestrators.token
 
-import com.xebialabs.community.xldeploy.orchestrators.Descriptions
+import com.xebialabs.community.xldeploy.orchestrators.Descriptions.{getDescriptionForContainer, getDescriptionForContainers, getDescriptionForSpec}
+import com.xebialabs.community.xldeploy.orchestrators.Orchestators._
 import com.xebialabs.deployit.engine.spi.orchestration.Orchestrations._
-import com.xebialabs.deployit.engine.spi.orchestration.{InterleavedOrchestration, Orchestration, Orchestrator}
+import com.xebialabs.deployit.engine.spi.orchestration.{Orchestration, Orchestrator}
 import com.xebialabs.deployit.plugin.api.deployment.specification.{Delta, DeltaSpecification}
 import com.xebialabs.deployit.plugin.api.reflect.Type
 import com.xebialabs.deployit.plugin.api.udm.Container
-
-import scala.collection.convert.Wrappers.{JCollectionWrapper, JIterableWrapper}
 
 /**
  * Orchestrator that injects delta's in the deltaspecification for token taking/releasing steps
  */
 @Orchestrator.Metadata(name = "token-inserter", description = "Ensures that token taking/releasing steps are generated for each container.")
 class TokenBasedOrchestrator extends Orchestrator {
-  import collection.convert.wrapAll._
-  import com.xebialabs.community.xldeploy.orchestrators.RichDelta._
+  import scala.collection.convert.wrapAll._
 
   def addToken(c: Container, deltas: List[Delta]): List[Delta] = {
     val c_id: String = c.getId.replace("/", "_")
@@ -33,21 +31,21 @@ class TokenBasedOrchestrator extends Orchestrator {
 
 
   override def orchestrate(specification: DeltaSpecification): Orchestration = {
-    val deltasByContainer: Map[Container, List[Delta]] = specification.getDeltas.toList.groupBy(_.container)
+    val deltasByContainer: Map[Container, List[Delta]] = byContainer(specification)
 
     def orchestrateContainer(c: Container): Orchestration = {
-      val d = Descriptions.getDescriptionForContainer(specification.getOperation, c)
+      val d = getDescriptionForContainer(specification.getOperation, c)
       interleaved(d, addToken(c, deltasByContainer(c)))
     }
 
     deltasByContainer.keys.toList match {
       case Nil =>
-        val d = Descriptions.getDescriptionForSpec(specification)
+        val d = getDescriptionForSpec(specification)
         interleaved(d, specification.getDeltas)
       case c :: Nil =>
         orchestrateContainer(c)
       case cs =>
-        val d: String = Descriptions.getDescriptionForContainers(specification.getOperation, deltasByContainer.keys.toSeq)
+        val d: String = getDescriptionForContainers(specification.getOperation, deltasByContainer.keys.toSeq)
         parallel(d, cs.map(orchestrateContainer))
     }
   }

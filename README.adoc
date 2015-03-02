@@ -1,0 +1,6 @@
+= XL Deploy Custom Orchestrators
+2015-02-26, XebiaLabs B.V.
+
+== Contents of this repository
+This repository contains the source code for a number of custom orchestrators that can be used in XL Deploy 4.5+. Below you will find a quick introduction per orchestrator:
+
