@@ -14,7 +14,7 @@ import com.xebialabs.deployit.plugin.api.udm.Deployable
 import scala.collection.convert.wrapAll._
 
 trait DeployableOrchestratorBase extends Orchestrator {
-  import com.xebialabs.community.xldeploy.orchestrators.Orchestators._
+  import com.xebialabs.community.xldeploy.orchestrators.Orchestrators._
 
   def getOrchestrations(spec: DeltaSpecification): List[Orchestration] = {
     val orderForOperation = getStringOrdering(spec.getOperation)

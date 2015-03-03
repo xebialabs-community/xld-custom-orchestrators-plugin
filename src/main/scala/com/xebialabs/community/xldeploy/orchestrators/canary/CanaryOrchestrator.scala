@@ -21,7 +21,7 @@ object CanaryOrchestrator {
 @Orchestrator.Metadata(name = "canary", description = "The Canary Deployment Orchestrator.")
 class CanaryOrchestrator extends Orchestrator {
   import com.xebialabs.community.xldeploy.orchestrators.RichDelta._
-  import com.xebialabs.community.xldeploy.orchestrators.Orchestators._
+  import com.xebialabs.community.xldeploy.orchestrators.Orchestrators._
   import collection.convert.wrapAll._
   import com.xebialabs.deployit.engine.spi.orchestration.Orchestrations._
 
@@ -40,7 +40,7 @@ class CanaryOrchestrator extends Orchestrator {
     }
 
     serial("Canary-style deployment",
-      interleaved(s"Canary deployment for ${canaries.map(_.deployed.getDeployable.asInstanceOf[ConfigurationItem].getName).mkString(", ")}", canaries),
+      interleaved(s"Canary deployment for ${canaries.map(_.deployable.getName).mkString(", ")}", canaries),
       interleaved(s"", allOthers)
     )
   }

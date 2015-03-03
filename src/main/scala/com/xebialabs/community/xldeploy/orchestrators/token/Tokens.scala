@@ -30,14 +30,13 @@ class TokenDelta(d: TokenDeployed) extends Delta {
 
 object TokenGenerator {
   import com.xebialabs.community.xldeploy.orchestrators.Locks._
-  import com.xebialabs.community.xldeploy.orchestrators.RichConfigurationItem._
 
   val s: ReentrantLock = new ReentrantLock()
   val cache: MMap[String, TokenGenerator] = MMap()
-  def apply(taskId: String, deployedApplication: DeployedApplication): TokenGenerator = {
+  def apply(tokenGeneratorIdentifier: String, maxNrTokens: Option[Int]): TokenGenerator = {
     using(s) {
-      cache.getOrElseUpdate(taskId, {
-        new TokenGenerator(taskId, deployedApplication.getPropertyIfExists("maxContainersInParallel"))
+      cache.getOrElseUpdate(tokenGeneratorIdentifier, {
+        new TokenGenerator(tokenGeneratorIdentifier, maxNrTokens)
       })
     }
   }
@@ -49,8 +48,8 @@ object TokenGenerator {
   }
 }
 
-class TokenGenerator(taskId: String, maxTokens: Option[Int]) extends Serializable {
-  val semaphore: Option[Semaphore] = maxTokens.map(new Semaphore(_))
+class TokenGenerator(tokenGeneratorIdentifier: String, maxNrTokens: Option[Int]) extends Serializable {
+  val semaphore: Option[Semaphore] = maxNrTokens.map(new Semaphore(_))
 
   def take(): Boolean = semaphore.map(_.tryAcquire()).getOrElse(true)
 
@@ -59,8 +58,8 @@ class TokenGenerator(taskId: String, maxTokens: Option[Int]) extends Serializabl
     if (semaphore.map {
       case s if !s.hasQueuedThreads => s.availablePermits()
       case _ => 0
-    }.getOrElse(0) == maxTokens.getOrElse(0)) {
-      TokenGenerator.remove(taskId)
+    }.getOrElse(0) == maxNrTokens.getOrElse(0)) {
+      TokenGenerator.remove(tokenGeneratorIdentifier)
     }
   }
 }
@@ -82,10 +81,11 @@ class TokenDeployed extends BaseDeployed[TokenDeployable, Container] {
 }
 
 class TokenTakingStep(container: Container, deployedApplication: DeployedApplication) extends Step {
+  import com.xebialabs.community.xldeploy.orchestrators.RichConfigurationItem._
   override def getOrder: Int = Int.MinValue
 
   override def execute(ctx: ExecutionContext): StepExitCode = {
-    TokenGenerator(ctx.getTask.getId, deployedApplication).take() match {
+    TokenGenerator(ctx.getTask.getId, deployedApplication.getPropertyIfExists("maxContainersInParallel")).take() match {
       case true =>
         ctx.logOutput(s"Successfully acquired token for ${container.getId}")
         StepExitCode.SUCCESS
@@ -99,10 +99,11 @@ class TokenTakingStep(container: Container, deployedApplication: DeployedApplica
 }
 
 class TokenReturningStep(container: Container, deployedApplication: DeployedApplication) extends Step {
+  import com.xebialabs.community.xldeploy.orchestrators.RichConfigurationItem._
   override def getOrder: Int = Int.MaxValue
 
   override def execute(ctx: ExecutionContext): StepExitCode = {
-    TokenGenerator(ctx.getTask.getId, deployedApplication).release()
+    TokenGenerator(ctx.getTask.getId, deployedApplication.getPropertyIfExists("maxContainersInParallel")).release()
     ctx.logOutput(s"Successfully returned token for ${container.getId}")
     StepExitCode.SUCCESS
   }

@@ -10,7 +10,7 @@ import com.xebialabs.deployit.engine.spi.orchestration.Orchestrations._
 import com.xebialabs.deployit.engine.spi.orchestration.{InterleavedOrchestration, Orchestration, Orchestrator}
 import com.xebialabs.deployit.plugin.api.deployment.specification.{Delta, DeltaSpecification, Operation}
 import com.xebialabs.deployit.plugin.api.udm.Container
-import com.xebialabs.community.xldeploy.orchestrators.Orchestators._
+import com.xebialabs.community.xldeploy.orchestrators.Orchestrators._
 
 import scala.collection.convert.wrapAll._
 

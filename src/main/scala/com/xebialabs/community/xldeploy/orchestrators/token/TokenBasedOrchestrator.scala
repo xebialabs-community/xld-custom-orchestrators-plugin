@@ -6,7 +6,7 @@
 package com.xebialabs.community.xldeploy.orchestrators.token
 
 import com.xebialabs.community.xldeploy.orchestrators.Descriptions.{getDescriptionForContainer, getDescriptionForContainers, getDescriptionForSpec}
-import com.xebialabs.community.xldeploy.orchestrators.Orchestators._
+import com.xebialabs.community.xldeploy.orchestrators.Orchestrators._
 import com.xebialabs.deployit.engine.spi.orchestration.Orchestrations._
 import com.xebialabs.deployit.engine.spi.orchestration.{Orchestration, Orchestrator}
 import com.xebialabs.deployit.plugin.api.deployment.specification.{Delta, DeltaSpecification}
