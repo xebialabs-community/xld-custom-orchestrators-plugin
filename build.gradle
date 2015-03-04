@@ -47,6 +47,8 @@ dependencies {
   compile "com.xebialabs.deployit:udm-plugin-api:$apiVersion"
   compile "com.xebialabs.deployit:engine-spi:$apiVersion"
   compile "com.xebialabs.deployit:engine-api:$apiVersion"
+  compile "org.clapper:grizzled-slf4j_2.10:1.0.1"
+  compile "org.slf4j:slf4j-api:1.7.7"
   compile files("hotfix/hotfix-xld45x-tokens.jar")
 }
 

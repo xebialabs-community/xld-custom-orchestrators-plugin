@@ -14,6 +14,8 @@ object RichConfigurationItem {
 class RichConfigurationItem(val ci: ConfigurationItem) extends AnyVal {
   def getPropertyIfExists[T](prop: String): Option[T] = ci.hasProperty(prop) match {
     case false => None
-    case _ => Option(ci.getProperty(prop))
+    case _ =>
+      val property: T = ci.getProperty(prop)
+      Option(property)
   }
 }
