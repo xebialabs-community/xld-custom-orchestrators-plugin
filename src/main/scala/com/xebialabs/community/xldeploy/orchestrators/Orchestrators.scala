@@ -5,6 +5,9 @@
  */
 package com.xebialabs.community.xldeploy.orchestrators
 
+import com.xebialabs.community.xldeploy.orchestrators.Descriptions.getDescriptionForSpec
+import com.xebialabs.deployit.engine.spi.orchestration.Orchestrations.interleaved
+import com.xebialabs.deployit.engine.spi.orchestration.{Orchestrations, Orchestration}
 import com.xebialabs.deployit.plugin.api.deployment.specification.{Delta, DeltaSpecification, Operation}
 import com.xebialabs.deployit.plugin.api.udm.{Deployable, Container}
 
@@ -26,5 +29,13 @@ object Orchestrators {
   def byContainer(deltas: List[Delta]): Map[Container, List[Delta]] = deltas.groupBy(_.container)
   def byDeployable(spec: DeltaSpecification): Map[Deployable, List[Delta]] = byDeployable(spec.getDeltas.toList)
   def byDeployable(deltas: List[Delta]): Map[Deployable, List[Delta]] = deltas.groupBy(_.deployable)
+
+  def defaultOrchestrationUnless(deltaSpecification: DeltaSpecification)(condition: => Boolean)(orchestrate: => Orchestration) = {
+    if (condition) {
+      orchestrate
+    } else {
+      interleaved(getDescriptionForSpec(deltaSpecification), deltaSpecification.getDeltas)
+    }
+  }
 
 }

@@ -19,26 +19,33 @@ import com.xebialabs.deployit.plugin.api.udm.Container
 @Orchestrator.Metadata(name = "token-inserter", description = "Ensures that token taking/releasing steps are generated for each container.")
 class GlobalTokenOrchestrator extends TokenOrchestratorBase {
   import scala.collection.convert.wrapAll._
+  import com.xebialabs.community.xldeploy.orchestrators.RichConfigurationItem._
 
   override def orchestrate(specification: DeltaSpecification): Orchestration = {
     val deltasByContainer: Map[Container, List[Delta]] = byContainer(specification)
 
-    def orchestrateContainer(c: Container): Orchestration = {
-      import com.xebialabs.community.xldeploy.orchestrators.RichConfigurationItem._
+    def orchestrateContainer(c: Container, parallellism: Option[Int]): Orchestration = {
       val d = getDescriptionForContainer(specification.getOperation, c)
-      val parallellism: Option[Int] = specification.getDeployedApplication.getPropertyIfExists(MaxContainersParallel)
-      interleaved(d, addToken(c, deltasByContainer(c), None, parallellism))
+      parallellism match {
+        case None => interleaved(d, deltasByContainer(c))
+        case Some(i) => interleaved(d, addToken(c, deltasByContainer(c), None, parallellism))
+
+      }
     }
 
-    deltasByContainer.keys.toList match {
-      case Nil =>
-        val d = getDescriptionForSpec(specification)
-        interleaved(d, specification.getDeltas)
-      case c :: Nil =>
-        orchestrateContainer(c)
-      case cs =>
-        val d: String = getDescriptionForContainers(specification.getOperation, deltasByContainer.keys.toSeq)
-        parallel(d, cs.map(orchestrateContainer))
+    val parallellism: Option[Int] = specification.getDeployedApplication.getPropertyIfExists(MaxContainersParallel)
+    val containersToDeploy: List[Container] = deltasByContainer.keys.toList
+    defaultOrchestrationUnless(specification)(containersToDeploy.isEmpty) {
+      containersToDeploy match {
+        case c :: Nil =>
+          orchestrateContainer(c, None)
+        case cs if parallellism.getOrElse(Int.MaxValue) < cs.size =>
+          val d: String = getDescriptionForContainers(specification.getOperation, deltasByContainer.keys.toSeq)
+          parallel(d, cs.map(orchestrateContainer(_, parallellism)))
+        case cs =>
+          val d: String = getDescriptionForContainers(specification.getOperation, deltasByContainer.keys.toSeq)
+          parallel(d, cs.map(orchestrateContainer(_, None)))
+      }
     }
   }
 }

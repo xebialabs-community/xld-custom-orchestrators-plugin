@@ -53,16 +53,14 @@ class TokenPerDeployableOrchestrator extends TokenOrchestratorBase with Logging 
     // as it originated from the deployable.
     val deltasByDeployable: Map[Deployable, List[Delta]] = byDeployable(specification)
 
-    deltasByDeployable.toList match {
-      case Nil =>
-        val desc = getDescriptionForSpec(specification)
-        interleaved(desc, specification.getDeltas)
-      case (d, ds) :: Nil =>
-        val desc = getDescriptionForSpec(specification)
-        orchestrateDeltas(d, ds)
-      case deltas =>
-        val desc = getDescriptionForDeployables(specification.getOperation, deltasByDeployable.keys.toSeq)
-        parallel(desc, deltas.map{ case (d, ds) => orchestrateDeltas(d, ds)})
+    defaultOrchestrationUnless(specification)(deltasByDeployable.isEmpty) { deltasByDeployable.toList match {
+        case (d, ds) :: Nil =>
+          val desc = getDescriptionForSpec(specification)
+          orchestrateDeltas(d, ds)
+        case deltas =>
+          val desc = getDescriptionForDeployables(specification.getOperation, deltasByDeployable.keys.toSeq)
+          parallel(desc, deltas.map { case (d, ds) => orchestrateDeltas(d, ds)})
+      }
     }
   }
 }
