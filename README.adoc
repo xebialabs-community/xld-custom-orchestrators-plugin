@@ -13,7 +13,7 @@ If you tag any deployables with the tag `canary`, XLD will group the deployment 
 This orchestrator will group the deployment by deployable. This is similar to the standard `parallel-by-container` and `serial-by-container` orchestrators which group the deployment by container.
 
 [[parallel-by-container-throttled]]
-=== `parallel-by-container-throttled` Orchestrator
+=== 'parallel-by-container-throttled' Orchestrator
 This orchestrator will group a deployment to multiple containers into multiple serial subplans, where each subplan deploys in parallel to all the containers in that subplan. This ensures that at any give time no more than the predefined number of containers is being deployed to.
 
 This behaviour is configured by defining the `maxContainersInParallel` property on the `udm.DeployedApplication`. This property then shows up in the deployment level properties of the deployment where it can be configured.
@@ -26,8 +26,8 @@ This behaviour is configured by defining the `maxContainersInParallel` property 
     </type-modification>
 ----
 
-=== `parallel-by-container-global-token` Orchestrator
-This orchestrator will deploy in parallel to all containers, but it will use a global token so that only so many containers at any given time are being deployed to. This is similar to the `<<parallel-by-container-throttled>>` orchestrator, but does not use precalculated subplans.
+=== 'parallel-by-container-global-token' Orchestrator
+This orchestrator will deploy in parallel to all containers, but it will use a global token so that only so many containers at any given time are being deployed to. This is similar to the <<parallel-by-container-throttled>> orchestrator, but does not use precalculated subplans.
 
 The number of tokens that can be used during the deployment is configured using the `maxContainersInParallel` property on the `udm.DeployedApplication`. Defining this property ensures that it shows up in the deployment level properties where it can be configured.
 
