@@ -16,7 +16,7 @@ import com.xebialabs.deployit.plugin.api.udm.Container
 /**
  * Orchestrator that injects delta's in the deltaspecification for token taking/releasing steps
  */
-@Orchestrator.Metadata(name = "token-inserter", description = "Ensures that token taking/releasing steps are generated for each container.")
+@Orchestrator.Metadata(name = "parallel-by-container-global-token", description = "Ensures that token taking/releasing steps are generated for each container.")
 class GlobalTokenOrchestrator extends TokenOrchestratorBase {
   import scala.collection.convert.wrapAll._
   import com.xebialabs.community.xldeploy.orchestrators.RichConfigurationItem._

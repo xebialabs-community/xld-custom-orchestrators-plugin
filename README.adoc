@@ -4,3 +4,39 @@
 == Contents of this repository
 This repository contains the source code for a number of custom orchestrators that can be used in XL Deploy 4.5+. Below you will find a quick introduction per orchestrator:
 
+=== 'canary' Orchestrator
+This orchestrator will make a 'canary' style deployment to the containers in the environment for specific deployables.
+
+If you tag any deployables with the tag `canary`, XLD will group the deployment into 2 serial subplans where the first subplan contains the deployment of those deployables to a single container in the environment, and the second subplan contains the deployment to the rest of the containers.
+
+=== 'parallel-by-deployable' and 'serial-by-deployable' Orchestrator
+This orchestrator will group the deployment by deployable. This is similar to the standard `parallel-by-container` and `serial-by-container` orchestrators which group the deployment by container.
+
+[[parallel-by-container-throttled]]
+=== `parallel-by-container-throttled` Orchestrator
+This orchestrator will group a deployment to multiple containers into multiple serial subplans, where each subplan deploys in parallel to all the containers in that subplan. This ensures that at any give time no more than the predefined number of containers is being deployed to.
+
+This behaviour is configured by defining the `maxContainersInParallel` property on the `udm.DeployedApplication`. This property then shows up in the deployment level properties of the deployment where it can be configured.
+
+[source,xml]
+.synthetic.xml
+----
+    <type-modification type="udm.DeployedApplication">
+        <property name="maxContainersInParallel" kind="integer" required="false" label="Maximum of containers to deploy to in parallel" description="The limit set on the 'parallel-by-container-throttle' orchestrator"/>
+    </type-modification>
+----
+
+=== `parallel-by-container-global-token` Orchestrator
+This orchestrator will deploy in parallel to all containers, but it will use a global token so that only so many containers at any given time are being deployed to. This is similar to the `<<parallel-by-container-throttled>>` orchestrator, but does not use precalculated subplans.
+
+The number of tokens that can be used during the deployment is configured using the `maxContainersInParallel` property on the `udm.DeployedApplication`. Defining this property ensures that it shows up in the deployment level properties where it can be configured.
+
+*NOTE:* In order to use this orchestrator in the XLD 4.5.x range of products, you need to install the `hotfix/hotfix-xld45x-tokens.jar` in the `hotfix` directory of your XLD server.
+
+[source,xml]
+.synthetic.xml
+----
+    <type-modification type="udm.DeployedApplication">
+        <property name="maxContainersInParallel" kind="integer" required="false" label="Maximum of containers to deploy to in parallel" description="The limit set on the 'parallel-by-container-throttle' orchestrator"/>
+    </type-modification>
+----
