@@ -21,6 +21,7 @@ class CanaryOrchestrator extends Orchestrator {
   import com.xebialabs.community.xldeploy.orchestrators.Orchestrators._
   import com.xebialabs.community.xldeploy.orchestrators.RichDelta._
   import com.xebialabs.deployit.engine.spi.orchestration.Orchestrations._
+  import com.xebialabs.community.xldeploy.orchestrators.Descriptions._
 
   import scala.collection.convert.wrapAll._
 
@@ -31,7 +32,7 @@ class CanaryOrchestrator extends Orchestrator {
     val allOthers: mutable.Buffer[Delta] = mutable.ArrayBuffer()
 
     deltaByDeployable.foreach {
-      case (deployable, deltas) if deployable.getTags.contains(CanaryTag) =>
+      case (deployable, deltas) if deployable != null && deployable.getTags.contains(CanaryTag) =>
         canaries += deltas.head
         allOthers ++= deltas.tail
       case (deployable, deltas) =>
@@ -40,7 +41,7 @@ class CanaryOrchestrator extends Orchestrator {
 
     defaultOrchestrationUnless(specification)(canaries.nonEmpty) {
       serial("Canary-style deployment",
-        interleaved(s"Canary deployment for ${canaries.map(_.deployable.getName).mkString(", ")}", canaries),
+        interleaved(s"Canary deployment for ${canaries.map(c => nameOrNull(c.deployable)).mkString(", ")}", canaries),
         interleaved(s"", allOthers)
       )
     }

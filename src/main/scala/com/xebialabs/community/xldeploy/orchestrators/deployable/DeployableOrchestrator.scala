@@ -19,7 +19,7 @@ trait DeployableOrchestratorBase extends Orchestrator {
   def getOrchestrations(spec: DeltaSpecification): List[Orchestration] = {
     val orderForOperation = getStringOrdering(spec.getOperation)
     val deltasByDeployable: Map[Deployable, List[Delta]] = byDeployable(spec)
-    deltasByDeployable.toList.sortBy(_._1.getName)(orderForOperation).map { case (d, ds) => interleaved(getDescriptionForDeployable(spec.getOperation, d), ds) }
+    deltasByDeployable.toList.sortBy(t => nameOrNull(t._1))(orderForOperation).map { case (d, ds) => interleaved(getDescriptionForDeployable(spec.getOperation, d), ds) }
   }
 }
 
