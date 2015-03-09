@@ -35,7 +35,7 @@ class GlobalTokenOrchestrator extends TokenOrchestratorBase {
 
     val parallellism: Option[Int] = specification.getDeployedApplication.getPropertyIfExists(MaxContainersParallel)
     val containersToDeploy: List[Container] = deltasByContainer.keys.toList
-    defaultOrchestrationUnless(specification)(containersToDeploy.isEmpty) {
+    defaultOrchestrationUnless(specification)(containersToDeploy.nonEmpty) {
       containersToDeploy match {
         case c :: Nil =>
           orchestrateContainer(c, None)

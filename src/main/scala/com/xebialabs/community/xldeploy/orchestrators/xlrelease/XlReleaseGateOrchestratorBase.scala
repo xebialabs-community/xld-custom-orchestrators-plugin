@@ -61,9 +61,12 @@ class XLReleaseOrchestrator extends XlReleaseOrchestratorBase with Logging {
 
   def addXlrDeployed(xlrInstance: Container, specification: DeltaSpecification): Orchestration = {
     val descriptor: Descriptor = Type.valueOf("xlrelease.CompletedTask").getDescriptor
+    val deployableDescriptor: Descriptor = Type.valueOf("xlrelease.CompleteTask").getDescriptor
     val xlrTaskProp: String = specification.getDeployedApplication.getProperty(XlReleaseTaskProperty)
-    val deployed: Deployed[Deployable, Container] = descriptor.newInstance(xlrInstance.getId + "/completedTask")
+    val deployed: Deployed[ Deployable, Container] = descriptor.newInstance(xlrInstance.getId + "/completedTask")
+    val deployable: Deployable = deployableDescriptor.newInstance("completeTask")
     descriptor.getPropertyDescriptor("taskId").set(deployed, xlrTaskProp)
+    deployed.setDeployable(deployable)
     deployed.setContainer(xlrInstance)
     interleaved(getDescriptionForSpec(specification), XlrDelta(deployed) :: specification.getDeltas.toList)
   }
