@@ -26,17 +26,60 @@ This behaviour is configured by defining the `maxContainersInParallel` property 
     </type-modification>
 ----
 
+[[parallel-by-container-global-token]]
 === 'parallel-by-container-global-token' Orchestrator
 This orchestrator will deploy in parallel to all containers, but it will use a global token so that only so many containers at any given time are being deployed to. This is similar to the <<parallel-by-container-throttled>> orchestrator, but does not use precalculated subplans.
 
 The number of tokens that can be used during the deployment is configured using the `maxContainersInParallel` property on the `udm.DeployedApplication`. Defining this property ensures that it shows up in the deployment level properties where it can be configured.
 
+[source,xml]
+.synthetic.xml
+----
+  <type-modification type="udm.DeployedApplication">
+      <property name="maxContainersInParallel" kind="integer" required="false" label="Maximum of containers to deploy to in parallel" description="The limit set on the throttling orchestrators"/>
+  </type-modification>
+----
+
 *NOTE:* In order to use this orchestrator in the XLD 4.5.x range of products, you need to install the `hotfix/hotfix-xld45x-tokens.jar` in the `hotfix` directory of your XLD server.
+
+=== 'parallel-by-container-token-per-deployable' Orchestrator
+This orchestrator will deploy in parallel to all containers, but it will use a token per deployable so that for any given deployable only a so many of the containers it is deployed to are down at any given moment during the deployment. This is similar to the <<parallel-by-container-global-token>> orchestrator.
+
+The number of tokens per deployable can be configured by defining the `maxContainersInParallel` property on (a subtype) of `udm.BaseDeployed`. 
 
 [source,xml]
 .synthetic.xml
 ----
-    <type-modification type="udm.DeployedApplication">
-        <property name="maxContainersInParallel" kind="integer" required="false" label="Maximum of containers to deploy to in parallel" description="The limit set on the 'parallel-by-container-throttle' orchestrator"/>
-    </type-modification>
+  <type-modification type="udm.BaseDeployed">
+      <property name="maxContainersInParallel" kind="integer" required="false" label="Maximum of containers to deploy to in parallel" description="The limit set on the throttling orchestrators"/>
+  </type-modification>
+
+  <type-modification type="udm.BaseDeployable">
+      <property name="maxContainersInParallel" kind="string" required="false" label="Maximum of containers to deploy to in parallel" description="The limit set on the throttling orchestrators"/>
+  </type-modification>
 ----
+
+
+*NOTE:* In order to use this orchestrator in the XLD 4.5.x range of products, you need to install the `hotfix/hotfix-xld45x-tokens.jar` in the `hotfix` directory of your XLD server.
+
+=== 'xl-release' orchestrator
+This orchestrator will ensure that a step will be added to the plan that will complete a task in XL Release. It does so by injecting a Delta into the plan that contains a configured XLR task id. This injection only happens when the deployment meets all of the following conditions:
+
+- The https://github.com/xebialabs-community/xld-xlrelease-plugin[xld-xlrelease-plugin] is installed in XLD
+- The `udm.DeployedApplication` has an `xlrTaskId` property which has a value set.
+- The `udm.Environment` being deployed to container an `xlrelease.Instance` ConfigurationItem as a member
+
+The task id is taken from the `xlrTaskId` property on the `udm.DeployedApplication`. Using the https://github.com/xebialabs-community/xlr-xldeploy-plugin[xlr-xldeploy-plugin] you can inject this property into the deployment properties.
+
+[source,xml]
+.synthetic.xml
+----
+  <type-modification type="udm.DeployedApplication">
+    <property name="xlrTaskId" kind="string" required="false" description="The ID of the XLR task to complete" />
+  </type-modification>
+----
+
+=== 'xl-release-gate-first' and 'xl-release-gate-last' orchestrators
+These orchestrators will split up the deployment plan into two serial plans where either the first or the last contains the delta containing the `xlrelease.CompletedTask` deployed. 
+
+For this orchestrator to work you need to install the https://github.com/xebialabs-community/xld-xlrelease-plugin[xld-xlrelease-plugin] in your XL Deploy server.
