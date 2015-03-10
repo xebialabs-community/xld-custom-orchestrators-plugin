@@ -14,10 +14,10 @@ object Descriptions {
   def nameOrNull(ci: ConfigurationItem): String = Option(ci).map(_.getName).orNull
 
   def getDescriptionForContainer(op: Operation, con: Container): String = List(verbs(op), "on container", con.getName).mkString(" ")
-  def getDescriptionForContainers(op: Operation, con: Seq[Container]): String = List(verbs(op), "on containers", con.map(_.getName).mkString(", ")).mkString(" ")
+  def getDescriptionForContainers(op: Operation, con: Iterable[Container]): String = List(verbs(op), "on containers", con.map(_.getName).mkString(", ")).mkString(" ")
 
   def getDescriptionForDeployable(op: Operation, d: Deployable): String = List(verbs(op), "of deployable", nameOrNull(d)).mkString(" ")
-  def getDescriptionForDeployables(op: Operation, ds: Seq[Deployable]): String = List(verbs(op), "of deployables", ds.map(nameOrNull).mkString(", ")).mkString(" ")
+  def getDescriptionForDeployables(op: Operation, ds: Iterable[Deployable]): String = List(verbs(op), "of deployables", ds.map(nameOrNull).mkString(", ")).mkString(" ")
 
   def getDescriptionForSpec(specification: DeltaSpecification): String = {
     val deployedApplication: DeployedApplication = specification.getDeployedApplication
