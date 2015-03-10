@@ -77,32 +77,38 @@ class GlobalTokenOrchestrator extends TokenOrchestratorBase {
 @Orchestrator.Metadata(name = "parallel-by-container-token-per-deployable", description = "Ensures that token taking/releasing steps are generated for each container a specific deployable is deployed to.")
 class TokenPerDeployableOrchestrator extends TokenOrchestratorBase with Logging {
 
-  def orchestrateContainer(dfc: DeltasForContainer, specification: DeltaSpecification): Orchestration = {
+  def orchestrateContainer(dfc: DeltasForContainer, specification: DeltaSpecification, deployableToAllDeltas: Map[Deployable, List[Delta]]): Orchestration = {
     // Assumption is that every deployed in the grouped deltas contains the same 'maxContainersInParallel' value,
     // as it originated from the deployable.
     val deltasByDeployable: Map[Deployable, List[Delta]] = byDeployable(dfc._2)
+    logger.info(s"Deltas per Deployable $deltasByDeployable for container ${dfc._1}")
     val deployableToOption: Map[Deployable, Option[Int]] = deltasByDeployable.mapValues { ds =>
       val head: Delta = ds.head
       val deployed: Deployed[_, _] = RichDelta.lift(head).deployed
       RichConfigurationItem.lift(deployed).getPropertyIfExists(MaxContainersParallel)
     }
+    logger.info(s"Max in parallel per deployable: $deployableToOption")
+
     val desc: String = getDescriptionForContainer(specification.getOperation, dfc._1)
     val tokenDeltas: List[Delta] = deployableToOption.toList.collect {
-      case (d, Some(i)) if i < deltasByDeployable(d).size => token(dfc, Option(d.getId), Option(i))
+      case (d, Some(i)) if i < deployableToAllDeltas(d).size => token(dfc, Option(d.getId), Option(i))
     }
+    logger.info(s"TokenDeltas")
+
     val ordering: Ordering[String] = getStringOrdering(specification.getOperation)
     interleaved(desc, (tokenDeltas ::: dfc._2).sortBy(delta => nameOrNull(RichDelta.lift(delta).deployable))(ordering))
   }
 
   override def orchestrate(specification: DeltaSpecification): Orchestration = {
     val containersToDeploy: List[(Container, List[Delta])] = getDeltasForContainer(specification)
+    val deployableToAllDeltas: Map[Deployable, List[Delta]] = byDeployable(specification)
     defaultOrchestrationUnless(specification)(containersToDeploy.nonEmpty) {
       containersToDeploy match {
         case c :: Nil =>
-          orchestrateContainer(c, specification)
+          orchestrateContainer(c, specification, deployableToAllDeltas)
         case cs =>
           val d: String = getDescriptionForContainers(specification.getOperation, containersToDeploy.map(_._1))
-          parallel(d, cs.map(c => orchestrateContainer(c, specification)))
+          parallel(d, cs.map(c => orchestrateContainer(c, specification, deployableToAllDeltas)))
       }
     }
   }

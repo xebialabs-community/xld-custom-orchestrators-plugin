@@ -8,7 +8,7 @@ package com.xebialabs.community.xldeploy.orchestrators.canary
 import com.xebialabs.community.xldeploy.orchestrators.canary.CanaryOrchestrator.CanaryTag
 import com.xebialabs.deployit.engine.spi.orchestration.{Orchestration, Orchestrator}
 import com.xebialabs.deployit.plugin.api.deployment.specification.{Delta, DeltaSpecification}
-import com.xebialabs.deployit.plugin.api.udm.Deployable
+import com.xebialabs.deployit.plugin.api.udm.{Container, Deployable}
 
 import scala.collection.mutable
 
@@ -26,17 +26,25 @@ class CanaryOrchestrator extends Orchestrator {
   import scala.collection.convert.wrapAll._
 
   override def orchestrate(specification: DeltaSpecification): Orchestration = {
-    val deltaByDeployable: Map[Deployable, List[Delta]] = byDeployable(specification)
+    val deltasPerContainer: Map[Container, List[Delta]] = byContainer(specification)
 
     val canaries: mutable.Buffer[Delta] = mutable.ArrayBuffer()
     val allOthers: mutable.Buffer[Delta] = mutable.ArrayBuffer()
+    val canarified: mutable.Set[Deployable] = mutable.HashSet()
 
-    deltaByDeployable.foreach {
-      case (deployable, deltas) if deployable != null && deployable.getTags.contains(CanaryTag) =>
-        canaries += deltas.head
-        allOthers ++= deltas.tail
-      case (deployable, deltas) =>
-        allOthers ++= deltas
+    def shouldBeCanarified(deployable: Deployable): Boolean =
+      deployable != null && !canarified.contains(deployable) && deployable.getTags.contains(CanaryTag)
+
+    deltasPerContainer.foreach {
+      case (c, ds) =>
+        byDeployable(ds).foreach {
+          case (deployable, deltas) if shouldBeCanarified(deployable) =>
+            canaries += deltas.head
+            allOthers ++= deltas.tail
+            canarified += deployable
+          case (deployable, deltas) =>
+            allOthers ++= deltas
+        }
     }
 
     defaultOrchestrationUnless(specification)(canaries.nonEmpty) {
