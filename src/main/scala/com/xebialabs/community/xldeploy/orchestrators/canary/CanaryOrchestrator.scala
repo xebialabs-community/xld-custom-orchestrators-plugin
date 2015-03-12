@@ -5,7 +5,7 @@
  */
 package com.xebialabs.community.xldeploy.orchestrators.canary
 
-import com.xebialabs.community.xldeploy.orchestrators.canary.CanaryOrchestrator.CanaryTag
+import com.xebialabs.community.xldeploy.orchestrators.canary.CanaryOrchestrator.{BirdcageTag, CanaryTag}
 import com.xebialabs.deployit.engine.spi.orchestration.{Orchestration, Orchestrator}
 import com.xebialabs.deployit.plugin.api.deployment.specification.{Delta, DeltaSpecification}
 import com.xebialabs.deployit.plugin.api.udm.{Container, Deployable}
@@ -14,6 +14,7 @@ import scala.collection.mutable
 
 object CanaryOrchestrator {
   val CanaryTag = "canary"
+  val BirdcageTag = "birdcage"
 }
 
 @Orchestrator.Metadata(name = "canary", description = "The Canary Deployment Orchestrator.")
@@ -35,17 +36,25 @@ class CanaryOrchestrator extends Orchestrator {
     def shouldBeCanarified(deployable: Deployable): Boolean =
       deployable != null && !canarified.contains(deployable) && deployable.getTags.contains(CanaryTag)
 
-    deltasPerContainer.foreach {
-      case (c, ds) =>
-        byDeployable(ds).foreach {
-          case (deployable, deltas) if shouldBeCanarified(deployable) =>
-            canaries += deltas.head
-            allOthers ++= deltas.tail
-            canarified += deployable
-          case (deployable, deltas) =>
-            allOthers ++= deltas
-        }
+    def canarify(map: Map[Container, List[Delta]]): Unit = {
+      map.foreach {
+        case (c, ds) =>
+          byDeployable(ds).foreach {
+            case (deployable, deltas) if shouldBeCanarified(deployable) =>
+              canaries += deltas.head
+              allOthers ++= deltas.tail
+              canarified += deployable
+            case (deployable, deltas) =>
+              allOthers ++= deltas
+          }
+      }
     }
+
+    val birdcagesVsRest: (Map[Container, List[Delta]], Map[Container, List[Delta]]) = deltasPerContainer.partition(_._1.getTags.contains(BirdcageTag))
+    // First canarify any birdcages
+    canarify(birdcagesVsRest._1)
+    // Then canarify the rest
+    canarify(birdcagesVsRest._2)
 
     defaultOrchestrationUnless(specification)(canaries.nonEmpty) {
       serial("Canary-style deployment",
