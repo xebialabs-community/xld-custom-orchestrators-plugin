@@ -28,12 +28,8 @@ repositories {
   mavenLocal()
   mavenCentral()
   maven {
-      credentials {
-            username 'community-plugins'
-            password 'community'
-        }
       url 'https://dist.xebialabs.com/public/maven2'
-    }
+  }
 }
 
 configurations {
