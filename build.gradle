@@ -17,12 +17,12 @@ apply plugin: 'eclipse'
 apply plugin: 'maven'
 
 group = 'com.xebialabs.deployit.community'
-version = '4.5.4'
+version = '4.5.5-SNAPSHOT'
 
 sourceCompatibility = 1.7
 targetCompatibility = 1.7
 
-def apiVersion = '2014.7.4'
+def apiVersion = '2015.1'
 
 repositories {
   mavenLocal()
@@ -43,8 +43,10 @@ dependencies {
   compile "com.xebialabs.deployit:udm-plugin-api:$apiVersion"
   compile "com.xebialabs.deployit:engine-spi:$apiVersion"
   compile "com.xebialabs.deployit:engine-api:$apiVersion"
+
   compile "org.clapper:grizzled-slf4j_2.10:1.0.1"
   compile "org.slf4j:slf4j-api:1.7.7"
+  compile "com.google.guava:guava:16.0"
   compile files("hotfix/hotfix-xld45x-tokens.jar")
 }
 

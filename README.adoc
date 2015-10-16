@@ -62,6 +62,12 @@ The number of tokens per deployable can be configured by defining the `maxContai
 
 *NOTE:* In order to use this orchestrator in the XLD 4.5.x range of products, you need to install the `hotfix/hotfix-xld45x-tokens.jar` in the `hotfix` directory of your XLD server.
 
+=== 'sequential-by-host-deployment-group'
+This orchestrator will deploy sequentially to all containers group by their hosts, the sequence is sorted by the 'deploymentGroup' property.
+
+=== 'parallel-by-host-deployment-group'
+This orchestrator will deploy in parallel to all containers group by their hosts, the sequence is sorted by the 'deploymentGroup' property.
+
 === 'xl-release' orchestrator
 This orchestrator will ensure that a step will be added to the plan that will complete a task in XL Release. It does so by injecting a Delta into the plan that contains a configured XLR task id. This injection only happens when the deployment meets all of the following conditions:
 
