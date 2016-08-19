@@ -33,6 +33,9 @@ repositories {
       }
       url 'http://nexus.xebialabs.com/nexus/content/repositories/releases'
   }
+  maven {
+      url 'https://nexus.xebialabs.com/nexus/content/groups/public'
+  }
 }
 
 configurations {
