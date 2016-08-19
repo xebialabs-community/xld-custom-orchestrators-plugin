@@ -1,34 +1,37 @@
-defaultTasks 'build'
-
-buildscript {
-  repositories {
-    jcenter()
-  }
-  dependencies {
-    classpath "nl.javadude.gradle.plugins:license-gradle-plugin:0.11.0"
-  }
+import org.apache.tools.ant.filters.ReplaceTokens
+plugins {
+    id "com.github.hierynomus.license" version "0.13.0"
+    id "com.xebialabs.xldp" version "1.0.5"
+    id "com.xebialabs.xld.docker" version "1.0.11"
 }
 
-apply plugin: "com.github.hierynomus.license"
-
+apply plugin: 'java'
 apply plugin: 'scala'
 apply plugin: 'idea'
 apply plugin: 'eclipse'
 apply plugin: 'maven'
 
+xldDocker {
+    version = '5.5.3.1'
+}
+
 group = 'com.xebialabs.deployit.community'
-version = '4.5.6'
+version = '4.6.0'
 
 sourceCompatibility = 1.7
 targetCompatibility = 1.7
 
-def apiVersion = '2015.1'
+def apiVersion = '2016.1.1'
 
 repositories {
   mavenLocal()
   mavenCentral()
   maven {
-      url 'https://dist.xebialabs.com/public/maven2'
+      credentials {
+          username 'community-plugins'
+          password 'community'
+      }
+      url 'http://nexus.xebialabs.com/nexus/content/repositories/releases'
   }
 }
 
@@ -57,6 +60,13 @@ task sourcesJar(type: Jar) {
 
 artifacts {
     archives sourcesJar
+}
+
+processResources.configure {
+    filter ReplaceTokens, tokens: [
+            'project.version': version.toString(),
+            'project.name': rootProject.name
+    ]
 }
 
 license {
