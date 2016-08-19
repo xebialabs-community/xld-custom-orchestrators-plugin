@@ -21,7 +21,7 @@ version = '4.6.0'
 sourceCompatibility = 1.7
 targetCompatibility = 1.7
 
-def apiVersion = '2015.6.6'
+def apiVersion = '2015.5.3'
 
 repositories {
   mavenLocal()
