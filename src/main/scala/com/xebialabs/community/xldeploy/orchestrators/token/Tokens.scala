@@ -8,18 +8,18 @@ package com.xebialabs.community.xldeploy.orchestrators.token
 import java.util.concurrent.Semaphore
 import java.util.concurrent.locks.ReentrantLock
 
-import com.xebialabs.community.xldeploy.orchestrators.token.Tokens.MaxContainersParallel
 import com.xebialabs.deployit.plugin.api.deployment.planning._
 import com.xebialabs.deployit.plugin.api.deployment.specification.{Delta, Operation}
-import com.xebialabs.deployit.plugin.api.flow.{ITask, ExecutionContext, Step, StepExitCode}
+import com.xebialabs.deployit.plugin.api.flow.{ExecutionContext, ITask, Step, StepExitCode}
+import com.xebialabs.deployit.plugin.api.udm.Container
 import com.xebialabs.deployit.plugin.api.udm.base.{BaseDeployable, BaseDeployed}
-import com.xebialabs.deployit.plugin.api.udm.{Container, DeployedApplication}
+import grizzled.slf4j.Logging
 
 import scala.collection.mutable.{Map => MMap}
 
 object Tokens {
   val MaxContainersParallel = "maxContainersInParallel"
-  
+
   def constructTokenGeneratorId(task: ITask, suffix: Option[String]): String = suffix match {
     case Some(x) => s"${task.getId}-$x"
     case None => task.getId
@@ -34,21 +34,36 @@ class TokenDelta(d: TokenDeployed) extends Delta {
   override def getPrevious: TokenDeployed = d
 }
 
-object TokenGenerator {
-  import com.xebialabs.community.xldeploy.orchestrators.Locks._
-
+class TokenGeneratorHolder extends Serializable with Logging {
   val s: ReentrantLock = new ReentrantLock()
   val cache: MMap[String, TokenGenerator] = MMap()
-  def apply(tokenGeneratorIdentifier: String, maxNrTokens: Option[Int]): TokenGenerator = {
+  import com.xebialabs.community.xldeploy.orchestrators.Locks._
+
+  def getOrCreate(tokenGeneratorIdentifier: String, maxNrTokens: Option[Int]): TokenGenerator = {
     using(s) {
       cache.getOrElseUpdate(tokenGeneratorIdentifier, {
+        logger.info(s"Creating new TokenGenerator for $tokenGeneratorIdentifier with $maxNrTokens")
         new TokenGenerator(tokenGeneratorIdentifier, maxNrTokens)
       })
     }
   }
 
+  def releaseToken(tokenGeneratorIdentifier: String): Unit = {
+    using(s) {
+      cache.get(tokenGeneratorIdentifier) match {
+        case Some(x) =>
+          val done = x.release()
+          if (done) {
+            remove(tokenGeneratorIdentifier)
+          }
+        case None => logger.warn(s"No TokenGenerator found for $tokenGeneratorIdentifier!")
+      }
+    }
+  }
+
   def remove(tokenGeneratorIdentifier: String): Unit = {
     using(s) {
+      logger.info(s"Done with TokenGeneator $tokenGeneratorIdentifier, removing from cache")
       cache.remove(tokenGeneratorIdentifier)
     }
   }
@@ -59,14 +74,16 @@ class TokenGenerator(tokenGeneratorIdentifier: String, maxNrTokens: Option[Int])
 
   def take(): Boolean = semaphore.map(_.tryAcquire()).getOrElse(true)
 
-  def release(): Unit = {
+  /**
+    * Release a Token.
+    * @return true iff all tokens have been returned to the TokenGenerator, false otherwise
+    */
+  def release(): Boolean = {
     semaphore.foreach(_.release())
-    if (semaphore.map {
+    semaphore.map {
       case s if !s.hasQueuedThreads => s.availablePermits()
       case _ => 0
-    }.getOrElse(0) == maxNrTokens.getOrElse(0)) {
-      TokenGenerator.remove(tokenGeneratorIdentifier)
-    }
+    }.getOrElse(0) == maxNrTokens.getOrElse(0)
   }
 }
 
@@ -74,27 +91,27 @@ class TokenDeployable extends BaseDeployable {
 }
 
 class TokenDeployed extends BaseDeployed[TokenDeployable, Container] {
-  import com.xebialabs.community.xldeploy.orchestrators.RichConfigurationItem._
 
   var tokenGeneratorIdSuffix: Option[String] = None
   var tokenGeneratorMaxTokens: Option[Int] = None
+  var tokenGeneratorHolder: TokenGeneratorHolder = _
 
   @Noop
   def tokens(ctx: DeploymentPlanningContext, delta: Delta): Unit = {
     if (tokenGeneratorMaxTokens.isDefined) {
-      ctx.addStep(new TokenTakingStep(this))
-      ctx.addStep(new TokenReturningStep(this))
+      ctx.addStep(new TokenTakingStep(this, tokenGeneratorHolder))
+      ctx.addStep(new TokenReturningStep(this, tokenGeneratorHolder))
     }
   }
 
 }
 
-class TokenTakingStep(deployed: TokenDeployed) extends Step {
+class TokenTakingStep(deployed: TokenDeployed, tokenGeneratorHolder: TokenGeneratorHolder) extends Step {
   override def getOrder: Int = Int.MinValue
 
   override def execute(ctx: ExecutionContext): StepExitCode = {
     val id: String = Tokens.constructTokenGeneratorId(ctx.getTask, deployed.tokenGeneratorIdSuffix)
-    TokenGenerator(id, deployed.tokenGeneratorMaxTokens).take() match {
+    tokenGeneratorHolder.getOrCreate(id, deployed.tokenGeneratorMaxTokens).take() match {
       case true =>
         ctx.logOutput(s"Successfully acquired token for ${deployed.getContainer.getId}")
         StepExitCode.SUCCESS
@@ -107,12 +124,12 @@ class TokenTakingStep(deployed: TokenDeployed) extends Step {
   override def getDescription: String = s"Take a token from the generator for deploying to ${deployed.getContainer.getId}"
 }
 
-class TokenReturningStep(deployed: TokenDeployed) extends Step {
+class TokenReturningStep(deployed: TokenDeployed, tokenGeneratorHolder: TokenGeneratorHolder) extends Step {
   override def getOrder: Int = Int.MaxValue
 
   override def execute(ctx: ExecutionContext): StepExitCode = {
     val id: String = Tokens.constructTokenGeneratorId(ctx.getTask, deployed.tokenGeneratorIdSuffix)
-    TokenGenerator(id, deployed.tokenGeneratorMaxTokens).release()
+    tokenGeneratorHolder.getOrCreate(id, deployed.tokenGeneratorMaxTokens).release()
     ctx.logOutput(s"Successfully returned token for ${deployed.getContainer.getId}")
     StepExitCode.SUCCESS
   }

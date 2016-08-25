@@ -23,12 +23,12 @@ class RichDelta(val delta: Delta) extends AnyVal {
     case false => None
   }
 }
-
-object ð {
-  def unapply(delta: Delta): Option[(Operation, Option[Deployed[_, _]], Option[Deployed[_, _]])] = delta.getOperation match {
-    case Operation.CREATE => Some((delta.getOperation, None, Some(delta.getDeployed)))
-    case Operation.DESTROY => Some((delta.getOperation, Some(delta.getPrevious), None))
-    case Operation.MODIFY => Some((delta.getOperation, Some(delta.getPrevious), Some(delta.getDeployed)))
-    case Operation.NOOP => Some((delta.getOperation, Some(delta.getDeployed), Some(delta.getDeployed)))
-  }
-}
+//
+//object ð {
+//  def unapply(delta: Delta): Option[(Operation, Option[Deployed[_, _]], Option[Deployed[_, _]])] = delta.getOperation match {
+//    case Operation.CREATE => Some((delta.getOperation, None, Some(delta.getDeployed)))
+//    case Operation.DESTROY => Some((delta.getOperation, Some(delta.getPrevious), None))
+//    case Operation.MODIFY => Some((delta.getOperation, Some(delta.getPrevious), Some(delta.getDeployed)))
+//    case Operation.NOOP => Some((delta.getOperation, Some(delta.getDeployed), Some(delta.getDeployed)))
+//  }
+//}

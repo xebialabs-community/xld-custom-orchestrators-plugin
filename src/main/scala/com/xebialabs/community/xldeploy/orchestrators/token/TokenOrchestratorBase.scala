@@ -25,7 +25,7 @@ object TokenOrchestratorBase {
 }
 
 abstract class TokenOrchestratorBase extends Orchestrator {
-  def token(c: DeltasForContainer, suffix: Option[String], maxParallel: Option[Int]): Delta = {
+  def token(c: DeltasForContainer, suffix: Option[String], maxParallel: Option[Int], tokenGeneratorHolder: TokenGeneratorHolder): Delta = {
     val c_id: String = c._1.getId.replace("/", "_")
     val deployable: TokenDeployable = Type.valueOf(classOf[TokenDeployable]).getDescriptor.newInstance(s"tokenDeployable-$c_id")
     val deployed: TokenDeployed = Type.valueOf(classOf[TokenDeployed]).getDescriptor.newInstance(s"tokenDeployed-$c_id")
@@ -33,6 +33,7 @@ abstract class TokenOrchestratorBase extends Orchestrator {
     deployed.setContainer(c._1)
     deployed.tokenGeneratorIdSuffix = suffix
     deployed.tokenGeneratorMaxTokens = maxParallel
+    deployed.tokenGeneratorHolder = tokenGeneratorHolder
     new TokenDelta(deployed)
   }
 
@@ -47,12 +48,13 @@ abstract class TokenOrchestratorBase extends Orchestrator {
 class GlobalTokenOrchestrator extends TokenOrchestratorBase {
   import scala.collection.convert.wrapAll._
   import com.xebialabs.community.xldeploy.orchestrators.RichConfigurationItem._
+  val tokenGeneratorHolder: TokenGeneratorHolder = new TokenGeneratorHolder
 
   def orchestrateContainer(dfc: DeltasForContainer, parallellism: Option[Int], specification: DeltaSpecification): Orchestration = {
     val desc = getDescriptionForContainer(specification.getOperation, dfc._1)
     parallellism match {
       case None => interleaved(desc, dfc._2)
-      case Some(i) => interleaved(desc, token(dfc, None, parallellism) :: dfc._2)
+      case Some(i) => interleaved(desc, token(dfc, None, parallellism, tokenGeneratorHolder) :: dfc._2)
     }
   }
 
@@ -77,6 +79,8 @@ class GlobalTokenOrchestrator extends TokenOrchestratorBase {
 @Orchestrator.Metadata(name = "parallel-by-container-token-per-deployable", description = "Ensures that token taking/releasing steps are generated for each container a specific deployable is deployed to.")
 class TokenPerDeployableOrchestrator extends TokenOrchestratorBase with Logging {
 
+  val tokenGeneratorHolder = new TokenGeneratorHolder
+
   def orchestrateContainer(dfc: DeltasForContainer, specification: DeltaSpecification, deployableToAllDeltas: Map[Deployable, List[Delta]]): Orchestration = {
     // Assumption is that every deployed in the grouped deltas contains the same 'maxContainersInParallel' value,
     // as it originated from the deployable.
@@ -91,7 +95,7 @@ class TokenPerDeployableOrchestrator extends TokenOrchestratorBase with Logging 
 
     val desc: String = getDescriptionForContainer(specification.getOperation, dfc._1)
     val tokenDeltas: List[Delta] = deployableToOption.toList.collect {
-      case (d, Some(i)) if i < deployableToAllDeltas(d).size => token(dfc, Option(d.getId), Option(i))
+      case (d, Some(i)) if i < deployableToAllDeltas(d).size => token(dfc, Option(d.getId), Option(i), tokenGeneratorHolder)
     }
     logger.info(s"TokenDeltas")
 
