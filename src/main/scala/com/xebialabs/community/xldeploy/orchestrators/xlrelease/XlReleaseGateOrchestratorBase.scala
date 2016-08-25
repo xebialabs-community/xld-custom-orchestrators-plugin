@@ -5,6 +5,9 @@
  */
 package com.xebialabs.community.xldeploy.orchestrators.xlrelease
 
+import java.util
+import java.util.Collections
+
 import com.xebialabs.community.xldeploy.orchestrators.Descriptions._
 import com.xebialabs.community.xldeploy.orchestrators.Orchestrators._
 import com.xebialabs.deployit.engine.spi.orchestration.Orchestrations._
@@ -141,4 +144,6 @@ case class XlrDelta(d: Deployed[_ <: Deployable, _ <: Container]) extends Delta 
   override def getOperation: Operation = Operation.CREATE
 
   override def getPrevious: Deployed[_, _] = d
+
+  override def getIntermediateCheckpoints: util.List[String] = Collections.emptyList()
 }

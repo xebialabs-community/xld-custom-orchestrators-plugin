@@ -5,6 +5,8 @@
  */
 package com.xebialabs.community.xldeploy.orchestrators.token
 
+import java.util
+import java.util.Collections
 import java.util.concurrent.Semaphore
 import java.util.concurrent.locks.ReentrantLock
 
@@ -32,6 +34,8 @@ class TokenDelta(d: TokenDeployed) extends Delta {
   override def getDeployed: TokenDeployed = d
 
   override def getPrevious: TokenDeployed = d
+
+  override def getIntermediateCheckpoints: util.List[String] = Collections.emptyList()
 }
 
 class TokenGeneratorHolder extends Serializable with Logging {
