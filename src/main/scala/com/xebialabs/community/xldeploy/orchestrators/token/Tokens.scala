@@ -43,51 +43,74 @@ class TokenGeneratorHolder extends Serializable with Logging {
   val cache: MMap[String, TokenGenerator] = MMap()
   import com.xebialabs.community.xldeploy.orchestrators.Locks._
 
-  def getOrCreate(tokenGeneratorIdentifier: String, maxNrTokens: Option[Int]): TokenGenerator = {
+  def takeToken(task: ITask, deployed: TokenDeployed, ctx: ExecutionContext): Boolean = {
+    val tokenGeneratorIdentifier = Tokens.constructTokenGeneratorId(task, deployed.tokenGeneratorIdSuffix)
     using(s) {
-      cache.getOrElseUpdate(tokenGeneratorIdentifier, {
-        logger.info(s"Creating new TokenGenerator for $tokenGeneratorIdentifier with $maxNrTokens")
-        new TokenGenerator(tokenGeneratorIdentifier, maxNrTokens)
-      })
+      val create: TokenGenerator = getOrCreate(tokenGeneratorIdentifier, deployed.tokenGeneratorMaxTokens, ctx)
+      create.take(ctx)
     }
   }
 
-  def releaseToken(tokenGeneratorIdentifier: String): Unit = {
+  def releaseToken(task: ITask, suffix: Option[String], ctx: ExecutionContext): Unit = {
+    val tokenGeneratorIdentifier = Tokens.constructTokenGeneratorId(task, suffix)
     using(s) {
       cache.get(tokenGeneratorIdentifier) match {
         case Some(x) =>
-          val done = x.release()
-          if (done) {
-            remove(tokenGeneratorIdentifier)
+          if (x.release(ctx)) {
+            remove(tokenGeneratorIdentifier, ctx)
           }
-        case None => logger.warn(s"No TokenGenerator found for $tokenGeneratorIdentifier!")
+        case None =>
+          ctx.logError(s"No TokenGenerator found for $tokenGeneratorIdentifier! Could not return the token.")
+          ctx.logError(s"Cache contents = ${cache.filterKeys(_.startsWith(task.getId))}")
       }
     }
   }
 
-  def remove(tokenGeneratorIdentifier: String): Unit = {
-    using(s) {
-      logger.info(s"Done with TokenGeneator $tokenGeneratorIdentifier, removing from cache")
-      cache.remove(tokenGeneratorIdentifier)
-    }
+  private[this] def getOrCreate(tokenGeneratorIdentifier: String, maxNrTokens: Option[Int], ctx: ExecutionContext): TokenGenerator = {
+    cache.getOrElseUpdate(tokenGeneratorIdentifier, {
+      ctx.logOutput(s"Creating new TokenGenerator for $tokenGeneratorIdentifier with $maxNrTokens")
+      new TokenGenerator(tokenGeneratorIdentifier, maxNrTokens)
+    })
+  }
+
+  private[this] def remove(tokenGeneratorIdentifier: String, ctx: ExecutionContext): Unit = {
+    ctx.logOutput(s"Done with TokenGenerator $tokenGeneratorIdentifier, removing from cache")
+    cache.remove(tokenGeneratorIdentifier)
   }
 }
 
 class TokenGenerator(tokenGeneratorIdentifier: String, maxNrTokens: Option[Int]) extends Serializable {
   val semaphore: Option[Semaphore] = maxNrTokens.map(new Semaphore(_))
 
-  def take(): Boolean = semaphore.map(_.tryAcquire()).getOrElse(true)
+  def take(ctx: ExecutionContext): Boolean = semaphore match {
+    case Some(x) => x.tryAcquire() match {
+      case true =>
+        ctx.logOutput(s"Took a token from $tokenGeneratorIdentifier, now there are ${x.availablePermits()} tokens left")
+        true
+      case false =>
+        ctx.logError(s"No tokens are left for $tokenGeneratorIdentifier")
+        false
+    }
+    case None =>
+      ctx.logOutput(s"No tokens are specified for $tokenGeneratorIdentifier, continuing execution...")
+      true
+  }
 
   /**
     * Release a Token.
     * @return true iff all tokens have been returned to the TokenGenerator, false otherwise
     */
-  def release(): Boolean = {
-    semaphore.foreach(_.release())
-    semaphore.map {
-      case s if !s.hasQueuedThreads => s.availablePermits()
-      case _ => 0
-    }.getOrElse(0) == maxNrTokens.getOrElse(0)
+  def release(ctx: ExecutionContext): Boolean = {
+    semaphore match {
+      case Some(x) =>
+        x.release()
+        ctx.logOutput(s"Token was returned for $tokenGeneratorIdentifier. We now have ${x.availablePermits()} of ${maxNrTokens.getOrElse(0)}")
+        val permits = if (!x.hasQueuedThreads) x.availablePermits() else 0
+        permits == maxNrTokens.getOrElse(0)
+      case None =>
+        ctx.logOutput(s"No tokens are specified for $tokenGeneratorIdentifier, continuing execution")
+        true
+    }
   }
 }
 
@@ -114,8 +137,7 @@ class TokenTakingStep(deployed: TokenDeployed, tokenGeneratorHolder: TokenGenera
   override def getOrder: Int = Int.MinValue
 
   override def execute(ctx: ExecutionContext): StepExitCode = {
-    val id: String = Tokens.constructTokenGeneratorId(ctx.getTask, deployed.tokenGeneratorIdSuffix)
-    tokenGeneratorHolder.getOrCreate(id, deployed.tokenGeneratorMaxTokens).take() match {
+    tokenGeneratorHolder.takeToken(ctx.getTask, deployed, ctx) match {
       case true =>
         ctx.logOutput(s"Successfully acquired token for ${deployed.getContainer.getId}")
         StepExitCode.SUCCESS
@@ -132,8 +154,7 @@ class TokenReturningStep(deployed: TokenDeployed, tokenGeneratorHolder: TokenGen
   override def getOrder: Int = Int.MaxValue
 
   override def execute(ctx: ExecutionContext): StepExitCode = {
-    val id: String = Tokens.constructTokenGeneratorId(ctx.getTask, deployed.tokenGeneratorIdSuffix)
-    tokenGeneratorHolder.getOrCreate(id, deployed.tokenGeneratorMaxTokens).release()
+    tokenGeneratorHolder.releaseToken(ctx.getTask, deployed.tokenGeneratorIdSuffix, ctx)
     ctx.logOutput(s"Successfully returned token for ${deployed.getContainer.getId}")
     StepExitCode.SUCCESS
   }
