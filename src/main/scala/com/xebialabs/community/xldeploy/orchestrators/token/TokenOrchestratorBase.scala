@@ -14,11 +14,13 @@ import com.xebialabs.community.xldeploy.orchestrators.token.TokenOrchestratorBas
 import com.xebialabs.community.xldeploy.orchestrators.token.Tokens._
 import com.xebialabs.deployit.engine.spi.orchestration.Orchestrations._
 import com.xebialabs.deployit.engine.spi.orchestration.{Orchestration, Orchestrator}
-import com.xebialabs.deployit.plugin.api.deployment.specification.{DeltaSpecification, Delta}
+import com.xebialabs.deployit.plugin.api.deployment.specification.{Delta, DeltaSpecification}
 import com.xebialabs.deployit.plugin.api.reflect.Type
-import com.xebialabs.deployit.plugin.api.udm.{Deployed, Deployable, Container}
+import com.xebialabs.deployit.plugin.api.udm.{Container, Deployable, Deployed}
 import grizzled.slf4j.Logging
+
 import collection.convert.wrapAll._
+import scala.collection.JavaConverters._
 
 object TokenOrchestratorBase {
   type DeltasForContainer = (Container, List[Delta])

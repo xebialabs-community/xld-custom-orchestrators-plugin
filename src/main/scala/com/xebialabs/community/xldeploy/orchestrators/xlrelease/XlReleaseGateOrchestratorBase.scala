@@ -139,11 +139,11 @@ class XlReleaseGateOrchestratorLast extends XlReleaseGateOrchestratorBase {
 }
 
 case class XlrDelta(d: Deployed[_ <: Deployable, _ <: Container]) extends Delta {
-  override def getDeployed: Deployed[_, _] = d
+  override def getDeployed: Deployed[_ <: Deployable, _ <: Container] = d
 
   override def getOperation: Operation = Operation.CREATE
 
-  override def getPrevious: Deployed[_, _] = d
+  override def getPrevious: Deployed[_ <: Deployable, _ <: Container] = d
 
   override def getIntermediateCheckpoints: util.List[String] = Collections.emptyList()
 }
