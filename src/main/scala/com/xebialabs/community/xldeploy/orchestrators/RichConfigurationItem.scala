@@ -12,10 +12,10 @@ object RichConfigurationItem {
 }
 
 class RichConfigurationItem(val ci: ConfigurationItem) extends AnyVal {
-  def getPropertyIfExists[T](prop: String): Option[T] = ci.hasProperty(prop) match {
-    case false => None
-    case _ =>
-      val property: T = ci.getProperty(prop)
-      Option(property)
+  def getPropertyIfExists[T](prop: String): Option[T] = if (ci.hasProperty(prop)) {
+    val property: T = ci.getProperty(prop)
+    Option(property)
+  } else {
+    None
   }
 }
