@@ -9,6 +9,8 @@ This orchestrator will make a 'canary' style deployment to the containers in the
 
 If you tag any deployables with the tag `canary`, XLD will group the deployment into 2 serial subplans where the first subplan contains the deployment of those deployables to a single container in the environment, and the second subplan contains the deployment to the rest of the containers.
 
+In case you want to mark a specific container as the target for the first canary deployment, you need to additionally apply the tag `birdcage` on that container.
+
 === 'parallel-by-deployable' and 'serial-by-deployable' Orchestrator
 This orchestrator will group the deployment by deployable. This is similar to the standard `parallel-by-container` and `serial-by-container` orchestrators which group the deployment by container.
 
