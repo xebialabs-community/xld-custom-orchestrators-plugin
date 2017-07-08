@@ -6,22 +6,11 @@ This repository contains the source code for a number of custom orchestrators th
 
 === CI status
 
-[![Build Status][xld-custom-orchestrators-plugin-travis-image] ][xld-custom-orchestrators-plugin-travis-url]
-[![Codacy Badge][xld-custom-orchestrators-plugin-codacy-image] ][xld-custom-orchestrators-plugin-codacy-url]
-[![Code Climate][xld-custom-orchestrators-plugin-code-climate-image] ][xld-custom-orchestrators-plugin-code-climate-url]
-[![License: MIT][xld-custom-orchestrators-plugin-license-image] ][xld-custom-orchestrators-plugin-license-url]
-[![Github All Releases][xld-custom-orchestrators-plugin-downloads-image] ]()
-
-[xld-custom-orchestrators-plugin-travis-image]: https://travis-ci.org/xebialabs-community/xld-custom-orchestrators-plugin.svg?branch=master
-[xld-custom-orchestrators-plugin-travis-url]: https://travis-ci.org/xebialabs-community/xld-custom-orchestrators-plugin
-[xld-custom-orchestrators-plugin-codacy-image]: https://api.codacy.com/project/badge/grade/869116a652014efe81a5ff8380b0a6a9
-[xld-custom-orchestrators-plugin-codacy-url]: https://www.codacy.com/app/joris-dewinne/xld-custom-orchestrators-plugin
-[xld-custom-orchestrators-plugin-code-climate-image]: https://codeclimate.com/github/xebialabs-community/xld-custom-orchestrators-plugin/badges/gpa.svg
-[xld-custom-orchestrators-plugin-code-climate-url]: https://codeclimate.com/github/xebialabs-community/xld-custom-orchestrators-plugin
-[xld-custom-orchestrators-plugin-license-image]: https://img.shields.io/badge/License-MIT-yellow.svg
-[xld-custom-orchestrators-plugin-license-url]: https://opensource.org/licenses/MIT
-[xld-custom-orchestrators-plugin-downloads-image]: https://img.shields.io/github/downloads/xebialabs-community/xld-custom-orchestrators-plugin/total.svg
-
+image:https://travis-ci.org/xebialabs-community/xld-custom-orchestrators-plugin.svg?branch=master[link:https://travis-ci.org/xebialabs-community/xld-custom-orchestrators-plugin]
+image:https://api.codacy.com/project/badge/grade/e5faea1be74e4efd8da851cc12765243[link:https://www.codacy.com/app/joris-dewinne/xld-custom-orchestrators-plugin]
+image:https://codeclimate.com/github/xebialabs-community/xld-custom-orchestrators-plugin/badges/gpa.svg[link:https://codeclimate.com/github/xebialabs-community/xld-custom-orchestrators-plugin]
+image:https://img.shields.io/badge/License-MIT-yellow.svg[link:https://opensource.org/licenses/MIT]
+image:https://img.shields.io/github/downloads/xebialabs-community/xld-custom-orchestrators-plugin/total.svg
 
 === 'canary' Orchestrator
 This orchestrator will make a 'canary' style deployment to the containers in the environment for specific deployables.
