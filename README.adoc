@@ -19,6 +19,9 @@ If you tag any deployables with the tag `canary`, XLD will group the deployment 
 
 In case you want to mark a specific container as the target for the first canary deployment, you need to additionally apply the tag `birdcage` on that container.
 
+**Note**- Order of orchestrators also matter in case multiple orchestrators are used in a deployment. 
+For e.g., If required to maintain order of deployment groups and if `canary` orchestrator is used along with `sequential-by-deployment-group` orchestrator then `sequential-by-deployment-group` should be used as 1st and `canary` as 2nd.
+
 === 'parallel-by-deployable' and 'serial-by-deployable' Orchestrator
 This orchestrator will group the deployment by deployable. This is similar to the standard `parallel-by-container` and `serial-by-container` orchestrators which group the deployment by container.
 
