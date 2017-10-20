@@ -25,7 +25,7 @@ class ThrottlingParallelContainerOrchestrator extends Orchestrator {
 
   type DeltasForContainer = (Container, List[Delta])
 
-  def orchestrate(spec: DeltaSpecification): Orchestration = getOrchestrations(spec)
+  override def orchestrate(spec: DeltaSpecification): Orchestration = getOrchestrations(spec)
 
   def getOrchestrations(spec: DeltaSpecification): Orchestration = {
 

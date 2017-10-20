@@ -3,7 +3,8 @@ deploy:
   provider: releases
   api_key:
     secure: PR4/8CObjIOi/6D9i0YbkITN/VneF0EHCokufHTiLnwwRY6qix2hFTrYpogtBbmE6EZB8djOUb9VeEmFGzxzIqaFGXrbnHvBUCuY2r+D9yaPWt2JWSg4MYJJJBldY2Krv5acXC1TT7ofs0nTJIfpOXScMIAnfLhsyqAz7yiqKxw=
-  file: build/libs/xld-custom-orchestrators-plugin-4.5.6.jar
+  file_glob: true
+  file: build/distributions/*
   skip_cleanup: true
   on:
     all_branches: true
