@@ -29,7 +29,7 @@ if (!project.hasProperty('release.useLastTag')) {
   project.ext['release.useLastTag'] = true
 }
 
-def apiVersion = '2018.3.0'
+def apiVersion = '2017.6.0'
 
 repositories {
   mavenLocal()
