@@ -50,10 +50,11 @@ dependencies {
   compile "com.xebialabs.deployit:udm-plugin-api:$apiVersion"
   compile "com.xebialabs.deployit:engine-spi:$apiVersion"
   compile "com.xebialabs.deployit:engine-api:$apiVersion"
+  compile "com.google.guava:guava:19.0"
 
   testCompile "org.clapper:grizzled-slf4j_2.12:1.3.0"
   testCompile "org.slf4j:slf4j-api:1.7.25"
-  testCompile "com.google.guava:guava:19.0"
+
 }
 
 task sourcesJar(type: Jar) {
