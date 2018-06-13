@@ -12,6 +12,11 @@ image:https://codeclimate.com/github/xebialabs-community/xld-custom-orchestrator
 image:https://img.shields.io/badge/License-MIT-yellow.svg[link="https://opensource.org/licenses/MIT"]
 image:https://img.shields.io/github/downloads/xebialabs-community/xld-custom-orchestrators-plugin/total.svg[]
 
+=== 'sort-by-deployed-weight' Orchestrator
+
+This orchestrator will group the deployment into a serial plan with all deltas sorted by type, weigh and name.
+Handy when precedence is required for deployeds of the same type.
+
 === 'canary' Orchestrator
 This orchestrator will make a 'canary' style deployment to the containers in the environment for specific deployables.
 
