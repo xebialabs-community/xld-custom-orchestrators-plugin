@@ -2,7 +2,7 @@ language: scala
 deploy:
   provider: releases
   api_key:
-    secure: d2u0VHuO5wx+htuQONiWVx1c5PsNeQgDfjm9LYjQQSl2RK7gFqcVNZOX2DPHdxUD131caZWgdcfjdimoFtJLt/3XwC14/7aFfVz0kIcMP/yKFYxJNmSGc2HPx3iaIOemUKYe7DrcaMxbqa8xXEzmYC1cJC8FCFG2SrLKWHvsGPo=
+    secure: GCV/pijxTzqJzj8Cm/nMeTCKz3Z+mvJLAy/VOrb0AJayt7qV4jB7ikHkMpwPqd/w6Fpocp1gKXwAMVJtDCNuxOCb/N3y9dzB1KSqJTw0bLu0BaHvy+XrIxHQx/o+D5x3239g6LaV+kyN1HT0yEe4yr6yAoGut3hmDGFPbTpaUVg=
   file_glob: true
   file: build/distributions/*
   skip_cleanup: true
