@@ -11,6 +11,5 @@ deploy:
     tags: true
     repo: xebialabs-community/xld-custom-orchestrators-plugin
 notifications:
-  hipchat:
-    rooms:
-      secure: R2E/KM4uh619oaqiQuOoR2dZ/jByflXhDRDozZqP+kMg0EMB1FkShfQsFR9oILNUGFStbW28XUH3JMfyuhD68ns48wyTbMy/6EJZ3rNf/F5USRzS3Jr3ZkHlHjgPCYsT752UFkRC7wsteAeElFl2tqA6Z9JASlvExgeHOf8DKWE=
+  slack:
+    secure: eC4jyEInhu1zaighv8+wwQHUCVDZ7Mh1QMa1PeBF3WzmIejAUTUWPpTZ+GC1QLF5rc6oDCmvR4ytplZ1LSrMupwxaCy6bcMdEG8Y6YmfGztupzxbtl0si0VwoaUZ/eD6BD6SK3p3rRcYiKQiQwJl+5Fi5CLstuYiukPGaqDiU18=
